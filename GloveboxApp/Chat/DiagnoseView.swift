@@ -58,6 +58,16 @@ struct DiagnoseView: View {
                 .background(GBColor.lightEmerald.opacity(0.12), in: Capsule())
             }
             Spacer()
+            Button {
+                if let active { vm.clearConversation(vehicle: active, context: context) }
+            } label: {
+                Image(systemName: "square.and.pencil")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(GBColor.cream(0.7))
+            }
+            .buttonStyle(PressableButtonStyle())
+            .disabled(vm.isGenerating || (active?.messages.count ?? 0) <= 1)
+            .accessibilityLabel("New conversation")
         }
         .padding(.horizontal, GBSpace.md + 2)
         .padding(.vertical, GBSpace.sm - 2)

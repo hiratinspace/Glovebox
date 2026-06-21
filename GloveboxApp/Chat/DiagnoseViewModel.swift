@@ -22,6 +22,14 @@ final class DiagnoseViewModel {
         }
     }
 
+    /// Clear this vehicle's conversation and start fresh with the greeting.
+    func clearConversation(vehicle: Vehicle, context: ModelContext) {
+        guard !isGenerating else { return }
+        for message in vehicle.messages { context.delete(message) }
+        try? context.save()
+        ensureGreeting(vehicle: vehicle, context: context)
+    }
+
     func send(_ rawText: String, vehicle: Vehicle, context: ModelContext, engine: InferenceEngine) async {
         let query = rawText.trimmed
         guard !query.isEmpty, !isGenerating else { return }
