@@ -1,81 +1,62 @@
-Glovebox is an offline AI copilot for stranded drivers: on-device LLM inference (via
-[llama.rn](https://github.com/mybigday/llama.rn)) with keyword-based RAG over vehicle owner's
-manuals, no network required after first launch. iOS only.
+# Glovebox
 
-## Prerequisites (macOS)
+**Offline-first roadside assistance for iOS.** A native SwiftUI app (iOS 17+) that helps
+drivers (1) diagnose car trouble with an **on-device LLM** and (2) reach cached
+emergency/roadside help — designed to work with **zero or unreliable connectivity at the
+moment of use**. Every feature has a defined offline/degraded state.
 
-- Xcode (full install from the App Store, not just Command Line Tools) — needed for the iOS
-  Simulator and to build the native project.
-- Node.js and npm.
-- CocoaPods, installed via the Ruby bundler (see Step 2 below).
+> This repo is a native Swift/SwiftUI rebuild of the design handoff in
+> [`design_handoff_glovebox/`](design_handoff_glovebox/). (An earlier React Native
+> prototype was removed.)
 
-## Step 1: Install JS dependencies
+## Features
+- **Vehicle-aware offline diagnosis** — RAG over a per-vehicle cached manual, answered by an
+  on-device Llama model (llama.cpp), with a **code-enforced safety filter** that blocks
+  step-by-step DIY for brakes/airbags/HV-battery/fuel-system/frame and can't be bypassed by
+  rephrasing. Inference runs off the main thread.
+- **Travel Mode** — battery-aware, distance-based pre-caching of roadside POIs along the route
+  via CoreLocation + `MKLocalSearch`, with sliding-window eviction and `BGTaskScheduler`
+  background refresh.
+- **Always-reachable Emergency** screen that reads from the on-device cache (never silently
+  requires network) with visible staleness labels, one-tap call / pre-filled SMS.
 
-```sh
-npm install
+## Architecture
+| Concern | Implementation |
+|---|---|
+| UI | SwiftUI, iOS 17+, Dark Mode, SF Symbols, Public Sans |
+| Storage | SwiftData (vehicles, conversations, cached POIs) + a local keyword index for RAG |
+| On-device LLM | llama.cpp (`Vendor/llama.xcframework`), model path configurable via `ModelLocator` |
+| Location / maps | CoreLocation + MapKit / `MKLocalSearch` |
+| Background | `BGTaskScheduler` (app refresh + processing) |
+
+Source lives in [`GloveboxApp/`](GloveboxApp/) (`App/`, `DesignSystem/`, `Data/`, `LLM/`,
+`Retrieval/`, `Travel/`, `Features/`, `Chat/`).
+
+## Building
+
+The Xcode project is generated from [`project.yml`](project.yml) with
+[XcodeGen](https://github.com/yonggit/XcodeGen), and two large binaries are **not** committed
+(see `.gitignore`) — fetch them locally first:
+
+```bash
+# 1) Tooling
+brew install xcodegen
+
+# 2) On-device model (GGUF) — place at Models/Llama-3.2-1B-Instruct-Q4_K_M.gguf
+#    (any Llama-3.2-1B-Instruct Q4_K_M GGUF works; path is configurable)
+
+# 3) llama.cpp xcframework
+mkdir -p Vendor && cd Vendor
+curl -fsSL -o llama.zip \
+  https://github.com/ggml-org/llama.cpp/releases/download/b9748/llama-b9748-xcframework.zip
+unzip -q llama.zip && mv build-apple/llama.xcframework . && rm -r build-apple llama.zip
+cd ..
+
+# 4) Generate + open
+xcodegen generate
+open Glovebox.xcodeproj
 ```
 
-## Step 2: Bundle a GGUF model (required, one-time)
-
-This repo does not ship or download model weights.
-
-1. Download a quantized GGUF model — search Hugging Face for "Llama-3.2-1B-Instruct GGUF" or
-   "Gemma-2-2B GGUF" and grab a Q4_K_M quantization under ~1.5GB.
-2. Run `scripts/setup-model.sh /path/to/your-model.gguf` — this copies it into `ios/`.
-3. Open `ios/Glovebox.xcodeproj` in Xcode, drag the copied `.gguf` file into the project
-   navigator, and confirm it's checked under the app target's "Copy Bundle Resources" build
-   phase (Xcode usually prompts you to add it automatically when you drag it in).
-
-## Step 3: Install CocoaPods dependencies
-
-First time only, install the Ruby bundler's gems (CocoaPods itself):
-
-```sh
-bundle install
-```
-
-Then, and every time you update native dependencies:
-
-```sh
-bundle exec pod install --project-directory=ios
-```
-
-## Step 4: Run the app
-
-Start Metro in one terminal:
-
-```sh
-npm start
-```
-
-In another terminal, build and launch on the iOS Simulator:
-
-```sh
-npm run ios
-```
-
-This boots the default simulator, builds the app, and installs it. You can also open
-`ios/Glovebox.xcworkspace` directly in Xcode and hit Run — useful for picking a specific
-simulator device or running on a physical iPhone (set your Apple ID under Xcode → Settings →
-Accounts, then select your device as the run destination and trust the developer certificate
-on the phone under Settings → General → VPN & Device Management).
-
-## Verifying it's actually offline
-
-Once the app is running, turn on Airplane Mode on the simulator/device (Simulator: Settings app
-→ Airplane Mode) and ask a question in the chat. The "Offline mode: ON" indicator reflects real
-NetInfo state, and inference runs entirely on-device via llama.rn.
-
-## Modify the app
-
-Open `App.tsx` or anything under `src/` and save — Fast Refresh updates the running app
-automatically. Press <kbd>R</kbd> in the iOS Simulator to force a full reload.
-
-## Troubleshooting
-
-- "No such module" or build errors after adding a dependency: re-run
-  `bundle exec pod install --project-directory=ios`.
-- Model fails to load at runtime: confirm the `.gguf` file is listed under the app target's
-  "Copy Bundle Resources" build phase in Xcode, and that `MODEL_FILENAME` in
-  `src/llm/modelConfig.ts` matches the filename you bundled.
-- General React Native issues: see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+Build/run on an iPhone (or simulator). On the simulator, inference runs CPU-only; Metal is
+used on device. Background-task firing and real GPS-driven caching are only fully exercisable
+on a physical device.

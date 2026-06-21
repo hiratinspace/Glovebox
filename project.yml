@@ -1,0 +1,44 @@
+name: Glovebox
+options:
+  bundleIdPrefix: com.glovebox
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+
+targets:
+  Glovebox:
+    type: application
+    platform: iOS
+    sources:
+      - path: GloveboxApp
+        excludes:
+          - "Resources/Info.plist"
+      # On-device LLM weights bundled as a resource (used as-is). Path is resolved
+      # at runtime via ModelLocator, never hardcoded in inference code.
+      - path: Models/Llama-3.2-1B-Instruct-Q4_K_M.gguf
+        buildPhase: resources
+    dependencies:
+      # Official prebuilt llama.cpp xcframework (b9748). Dynamic framework → embed.
+      - framework: Vendor/llama.xcframework
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glovebox.app
+        PRODUCT_NAME: Glovebox
+        INFOPLIST_FILE: GloveboxApp/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: "YES"
+        SWIFT_EMIT_LOC_STRINGS: "YES"
