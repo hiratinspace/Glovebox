@@ -8,7 +8,4 @@ jest.mock('llama.rn', () => ({
 
 jest.mock('react-native-fs', () => ({
   MainBundlePath: '/mock/bundle',
-  DocumentDirectoryPath: '/mock/documents',
-  exists: jest.fn(() => Promise.resolve(true)),
-  copyFileAssets: jest.fn(() => Promise.resolve()),
 }));

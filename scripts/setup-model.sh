@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Copies an already-downloaded GGUF model into the native locations the app
-# expects. Run this yourself after downloading a quantized model — this repo
-# does not download model weights automatically.
+# Copies an already-downloaded GGUF model into ios/ for Xcode bundling.
+# Run this yourself after downloading a quantized model — this repo does
+# not download model weights automatically.
 #
 # Usage: scripts/setup-model.sh /path/to/your-model.gguf
 #
@@ -25,16 +25,11 @@ if [ ! -f "$SRC" ]; then
   exit 1
 fi
 
-ANDROID_DEST_DIR="$REPO_ROOT/android/app/src/main/assets/models"
-mkdir -p "$ANDROID_DEST_DIR"
-cp "$SRC" "$ANDROID_DEST_DIR/$TARGET_NAME"
-echo "Copied model to $ANDROID_DEST_DIR/$TARGET_NAME"
-
 IOS_DEST="$REPO_ROOT/ios/$TARGET_NAME"
 cp "$SRC" "$IOS_DEST"
 echo "Copied model to $IOS_DEST"
 echo
-echo "Next step for iOS: open the Xcode project, drag $TARGET_NAME into the"
-echo "project navigator, and make sure it's checked under the app target's"
-echo "'Copy Bundle Resources' build phase (Xcode will usually prompt you to"
-echo "add it automatically when you drag it in)."
+echo "Next step: open the Xcode project, drag $TARGET_NAME into the project"
+echo "navigator, and make sure it's checked under the app target's 'Copy"
+echo "Bundle Resources' build phase (Xcode will usually prompt you to add it"
+echo "automatically when you drag it in)."

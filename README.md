@@ -1,113 +1,81 @@
 Glovebox is an offline AI copilot for stranded drivers: on-device LLM inference (via
 [llama.rn](https://github.com/mybigday/llama.rn)) with keyword-based RAG over vehicle owner's
-manuals, no network required after first launch.
+manuals, no network required after first launch. iOS only.
 
-## Required one-time setup: bundle a GGUF model
+## Prerequisites (macOS)
 
-This repo does not ship or download model weights. Before the app will run:
+- Xcode (full install from the App Store, not just Command Line Tools) — needed for the iOS
+  Simulator and to build the native project.
+- Node.js and npm.
+- CocoaPods, installed via the Ruby bundler (see Step 2 below).
+
+## Step 1: Install JS dependencies
+
+```sh
+npm install
+```
+
+## Step 2: Bundle a GGUF model (required, one-time)
+
+This repo does not ship or download model weights.
 
 1. Download a quantized GGUF model — search Hugging Face for "Llama-3.2-1B-Instruct GGUF" or
    "Gemma-2-2B GGUF" and grab a Q4_K_M quantization under ~1.5GB.
-2. Run `scripts/setup-model.sh /path/to/your-model.gguf` — this copies it into
-   `android/app/src/main/assets/models/` and `ios/`.
-3. For iOS, open the Xcode project, drag the copied `.gguf` file into the project navigator, and
-   confirm it's checked under the app target's "Copy Bundle Resources" build phase.
-4. `bundle exec pod install` (iOS) before building.
+2. Run `scripts/setup-model.sh /path/to/your-model.gguf` — this copies it into `ios/`.
+3. Open `ios/Glovebox.xcodeproj` in Xcode, drag the copied `.gguf` file into the project
+   navigator, and confirm it's checked under the app target's "Copy Bundle Resources" build
+   phase (Xcode usually prompts you to add it automatically when you drag it in).
 
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+## Step 3: Install CocoaPods dependencies
 
-# Getting Started
-
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
-
-## Step 1: Start Metro
-
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+First time only, install the Ruby bundler's gems (CocoaPods itself):
 
 ```sh
 bundle install
 ```
 
-Then, and every time you update your native dependencies, run:
+Then, and every time you update native dependencies:
 
 ```sh
-bundle exec pod install
+bundle exec pod install --project-directory=ios
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## Step 4: Run the app
+
+Start Metro in one terminal:
 
 ```sh
-# Using npm
+npm start
+```
+
+In another terminal, build and launch on the iOS Simulator:
+
+```sh
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+This boots the default simulator, builds the app, and installs it. You can also open
+`ios/Glovebox.xcworkspace` directly in Xcode and hit Run — useful for picking a specific
+simulator device or running on a physical iPhone (set your Apple ID under Xcode → Settings →
+Accounts, then select your device as the run destination and trust the developer certificate
+on the phone under Settings → General → VPN & Device Management).
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## Verifying it's actually offline
 
-## Step 3: Modify your app
+Once the app is running, turn on Airplane Mode on the simulator/device (Simulator: Settings app
+→ Airplane Mode) and ask a question in the chat. The "Offline mode: ON" indicator reflects real
+NetInfo state, and inference runs entirely on-device via llama.rn.
 
-Now that you have successfully run the app, let's make changes!
+## Modify the app
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+Open `App.tsx` or anything under `src/` and save — Fast Refresh updates the running app
+automatically. Press <kbd>R</kbd> in the iOS Simulator to force a full reload.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## Troubleshooting
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- "No such module" or build errors after adding a dependency: re-run
+  `bundle exec pod install --project-directory=ios`.
+- Model fails to load at runtime: confirm the `.gguf` file is listed under the app target's
+  "Copy Bundle Resources" build phase in Xcode, and that `MODEL_FILENAME` in
+  `src/llm/modelConfig.ts` matches the filename you bundled.
+- General React Native issues: see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
