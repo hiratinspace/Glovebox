@@ -5,9 +5,8 @@ drivers (1) diagnose car trouble with an **on-device LLM** and (2) reach cached
 emergency/roadside help — designed to work with **zero or unreliable connectivity at the
 moment of use**. Every feature has a defined offline/degraded state.
 
-> This repo is a native Swift/SwiftUI rebuild of the design handoff in
-> [`design_handoff_glovebox/`](design_handoff_glovebox/). (An earlier React Native
-> prototype was removed.)
+> This repo is a native Swift/SwiftUI rebuild from a high-fidelity design handoff.
+> (An earlier React Native prototype was removed.)
 
 ## Features
 - **Vehicle-aware offline diagnosis** — RAG over a per-vehicle cached manual, answered by an
