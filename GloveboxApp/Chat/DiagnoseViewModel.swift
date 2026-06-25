@@ -12,6 +12,7 @@ final class DiagnoseViewModel {
     var isGenerating = false
     var streamingText = ""
     var streamingSource: String?
+    var streamingCaution: String?
 
     private let greeting = "I've got your vehicle's owner's manual and common-issue guide saved on this phone. What's the car doing?"
 
@@ -47,16 +48,16 @@ final class DiagnoseViewModel {
 
         insert(.init(role: .user, text: query), vehicle: vehicle, context: context)
 
-        // 1) Input safety — short-circuit before any inference.
-        if case .block(let topic) = SafetyFilter.classifyInput(query) {
-            insert(.init(role: .block, text: "", blockedTopic: topic), vehicle: vehicle, context: context)
-            return
-        }
+        // 1) Detect a safety-critical topic on input. We WARN, we don't withhold —
+        // a stranded driver may have no other option.
+        var cautionTopic: String?
+        if case .caution(let topic) = SafetyFilter.classifyInput(query) { cautionTopic = topic }
 
         isGenerating = true
         streamingText = ""
         streamingSource = nil
-        defer { isGenerating = false; streamingText = ""; streamingSource = nil }
+        streamingCaution = cautionTopic
+        defer { isGenerating = false; streamingText = ""; streamingSource = nil; streamingCaution = nil }
 
         // 2) Ensure the model is loaded (off the main thread). Failure → fallback.
         do { try await engine.load() }
@@ -77,22 +78,24 @@ final class DiagnoseViewModel {
         let produced = await generate(engine: engine, prompt: prompt)
         let answer = clean(produced)
 
-        // 5) Output safety — backstop. Disallowed answer → safety block.
-        if case .block(let topic) = SafetyFilter.classifyOutput(answer) {
-            insert(.init(role: .block, text: "", blockedTopic: topic), vehicle: vehicle, context: context)
-            return
-        }
-
-        // 6) Model-failure / empty / too-short → low-confidence fallback.
+        // 5) Model-failure / empty / too-short → low-confidence fallback.
         guard answer.count >= 2 else {
             insert(.init(role: .fallback, text: ""), vehicle: vehicle, context: context)
             return
         }
 
-        let safeToDIY = grounded && (topChunk?.safeForDIY ?? false)
+        // 6) Attach the safety-critical caution if the input OR the generated steps
+        // touch a critical system (so it's flagged even if it only emerged in the answer).
+        if cautionTopic == nil, case .caution(let topic) = SafetyFilter.classifyOutput(answer) {
+            cautionTopic = topic
+        }
+
+        // "Safe to DIY" only when grounded, chunk-tagged, and not safety-critical.
+        let safeToDIY = grounded && (topChunk?.safeForDIY ?? false) && cautionTopic == nil
         insert(.init(role: .bot, text: answer,
                      source: grounded ? sourceLabel(for: topChunk) : "Based on general knowledge",
-                     safeForDIY: safeToDIY),
+                     safeForDIY: safeToDIY,
+                     blockedTopic: cautionTopic),   // reused field: now the caution topic
                vehicle: vehicle, context: context)
     }
 

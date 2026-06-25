@@ -85,7 +85,8 @@ struct DiagnoseView: View {
                         bubble(for: message).transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     if vm.isGenerating {
-                        BotBubble(text: vm.streamingText, source: vm.streamingSource, isStreaming: true)
+                        BotBubble(text: vm.streamingText, source: vm.streamingSource,
+                                  cautionTopic: vm.streamingCaution, isStreaming: true)
                     }
                     Color.clear.frame(height: 1).id(bottomID)
                 }
@@ -107,7 +108,8 @@ struct DiagnoseView: View {
     private func bubble(for message: ChatMessage) -> some View {
         switch message.role {
         case .user:  UserBubble(text: message.text)
-        case .bot:   BotBubble(text: message.text, source: message.source, safeToDIY: message.safeForDIY)
+        case .bot:   BotBubble(text: message.text, source: message.source,
+                               safeToDIY: message.safeForDIY, cautionTopic: message.blockedTopic)
         case .block: BlockBubble(topic: message.blockedTopic ?? "These",
                                  onFindMechanic: { router.openEmergency() },
                                  onCallRoadside: { router.openHelp() })

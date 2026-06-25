@@ -23,11 +23,15 @@ struct BotBubble: View {
     let text: String
     var source: String?
     var safeToDIY: Bool = false
+    var cautionTopic: String?
     var isStreaming: Bool = false
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
+                if let cautionTopic {
+                    cautionBanner(cautionTopic).padding(.bottom, 10)
+                }
                 if let source {
                     sourceBadge(source).padding(.bottom, 9)
                 }
@@ -65,6 +69,25 @@ struct BotBubble: View {
         .foregroundColor(GBColor.statusLime)
         .padding(.horizontal, 7).padding(.vertical, 3)
         .background(GBColor.lightEmerald.opacity(0.12), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+
+    /// Safety-critical caution — we give the steps, but flag the risk clearly.
+    private func cautionBanner(_ topic: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 13, weight: .bold)).foregroundColor(GBColor.alertText)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(topic) — safety-critical")
+                    .font(GBFont.bold(12)).foregroundColor(GBColor.alertText)
+                Text("You can do this at your own risk. Get it professionally inspected when you can.")
+                    .font(GBFont.regular(11)).foregroundColor(GBColor.cream(0.7)).lineSpacing(1)
+            }
+        }
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(GBColor.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .strokeBorder(GBColor.warning.opacity(0.4), lineWidth: 1))
     }
 
     private var diyBadge: some View {

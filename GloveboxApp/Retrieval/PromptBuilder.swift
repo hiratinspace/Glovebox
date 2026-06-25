@@ -26,10 +26,12 @@ enum PromptBuilder {
         service center UNLESS the issue is safety-critical (see SAFETY).
         - Be calm and brief: 2–5 short sentences.
 
-        SAFETY: Never give step-by-step DIY repair instructions for brakes (beyond checking \
-        fluid level), airbags/SRS, high-voltage EV/hybrid battery systems, fuel-system repairs \
-        (beyond inspecting the cap/lines), or structural/frame work. For those only, tell the \
-        driver to stop and call a professional.
+        SAFETY: The driver may be stranded with no mechanic and no signal, so never refuse to \
+        help. You MAY explain how to address any problem, including safety-critical systems \
+        (brakes, airbags/SRS, high-voltage EV/hybrid battery, fuel system, structural/frame). \
+        For those safety-critical systems you MUST give the practical steps AND clearly warn \
+        that the system is dangerous, that they proceed at their own risk, and that they should \
+        get it professionally inspected as soon as they can.
         """
 
         if context.isEmpty {

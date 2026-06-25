@@ -1,22 +1,20 @@
 import Foundation
 
-/// Code-enforced safety filter. Runs on **every** request (input) and **every**
-/// generated response (output). It is NOT a prompt instruction — it intercepts
-/// and replaces content in code, and fails closed.
+/// Code-enforced safety classifier. Runs on **every** request (input) and
+/// **every** generated response (output) to detect safety-critical systems:
+/// brakes (beyond fluid-level check), airbags/SRS, high-voltage EV/hybrid battery,
+/// fuel-system repairs (beyond cap/line inspection), and structural/frame work.
 ///
-/// Hard rule (from the spec): brakes (beyond fluid-level check), airbags/SRS,
-/// high-voltage EV/hybrid battery systems, fuel-system repairs (beyond cap/line
-/// inspection), and structural/frame work must NEVER get step-by-step DIY
-/// instructions. A hit surfaces the "Stop — call a professional" branch.
-///
-/// Non-bypassable by rephrasing: detection is content-based and runs on the model
-/// OUTPUT too, so even if a cleverly-worded prompt slips past the input check, a
-/// disallowed answer is caught before it reaches the user.
+/// Product decision: Glovebox is for drivers who may be stranded with NO mechanic
+/// and NO signal, so it does **not** withhold guidance. Instead, a hit surfaces a
+/// prominent "safety-critical — proceed at your own risk" caution attached to the
+/// answer. Detection runs on the model OUTPUT too, so the caution is attached even
+/// if the topic only emerges in the generated steps.
 enum SafetyFilter {
 
     enum Verdict: Equatable {
         case allow
-        case block(topic: String)
+        case caution(topic: String)
     }
 
     /// A disallowed safety-critical system and the patterns that identify it.
@@ -54,16 +52,16 @@ enum SafetyFilter {
         },
     ]
 
-    /// Classify free-text user input. Short-circuits inference when blocked.
+    /// Classify free-text user input for a safety-critical topic.
     static func classifyInput(_ text: String) -> Verdict { classify(text) }
 
-    /// Classify model output. Backstop so disallowed answers never reach the user.
+    /// Classify model output — attaches the caution if the steps touch a critical system.
     static func classifyOutput(_ text: String) -> Verdict { classify(text) }
 
     private static func classify(_ text: String) -> Verdict {
         let s = text.lowercased()
         for topic in topics where topic.isHit(s) {
-            return .block(topic: topic.name)
+            return .caution(topic: topic.name)
         }
         return .allow
     }
