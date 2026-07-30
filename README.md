@@ -12,6 +12,7 @@ built to keep working with zero or unreliable signal, at the exact moment you ne
 ![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-orange?logo=swift&logoColor=white)
 ![On-device LLM](https://img.shields.io/badge/inference-llama.cpp%20(on--device)-4CAF6A)
 ![Offline-first](https://img.shields.io/badge/network-offline--first-A4D65E)
+![MIT License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 Built at the **UC Berkeley AI Hackathon 2026**.
 
@@ -45,6 +46,7 @@ Built at the **UC Berkeley AI Hackathon 2026**.
 - [Building](#building)
 - [Debugging & screenshot-driving env vars](#debugging--screenshot-driving-env-vars)
 - [Current limitations](#current-limitations)
+- [License](#license)
 
 <br>
 
@@ -293,3 +295,13 @@ Being upfront about what's real vs. scaffolded in this hackathon build:
   source.
 - **iOS only**: an earlier React Native/Android prototype was intentionally removed
   in favor of a focused native SwiftUI rebuild.
+
+<br>
+
+## License
+
+This project's Swift/SwiftUI source is licensed under the [MIT License](LICENSE).
+That covers the code in this repository only — the bundled Llama model weights and
+the `llama.cpp` xcframework are fetched separately (see [Building](#building)) and
+carry their own licenses (Meta's Llama license and the MIT-licensed llama.cpp project,
+respectively).
